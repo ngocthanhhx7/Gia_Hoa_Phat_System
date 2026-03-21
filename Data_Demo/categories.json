@@ -1,0 +1,23 @@
+[
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6f9"
+    },
+    "name": "Laptop",
+    "description": "All types of laptops and notebooks"
+  },
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6f8"
+    },
+    "name": "Mobile",
+    "description": "All types of mobile"
+  },
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6f7"
+    },
+    "name": "Television",
+    "description": "All types of TV"
+  }
+]

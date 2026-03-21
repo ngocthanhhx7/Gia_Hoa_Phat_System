@@ -1,0 +1,77 @@
+[
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fa"
+    },
+    "name": "Laptop Dell XPS 13",
+    "description": "A high-end ultrabook for professionals.",
+    "price": 25990000,
+    "stock": 100,
+    "category": {
+      "$oid": "665f2fcb6b449f0d1437b6f9"
+    },
+    "brand": "Dell",
+    "tags": ["ultrabook", "dell", "xps"],
+    "ratings": [
+      {
+        "userId": {
+          "$oid": "665f2fcb6b449f0d1437b6f8"
+        },
+        "score": 4.5,
+        "comment": "Very good laptop",
+        "createdAt": "2024-01-02T12:00:00Z"
+      }
+    ],
+    "createdAt": "2024-01-01T08:00:00Z"
+  },
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fb"
+    },
+    "name": "Laptop ThinkPad XPS 15",
+    "description": "A high-end ultrabook for professionals.",
+    "price": 30990000,
+    "stock": 10,
+    "category": {
+      "$oid": "665f2fcb6b449f0d1437b6f9"
+    },
+    "brand": "Lenovo",
+    "tags": ["ultrabook", "thinkpad", "xps"],
+    "ratings": [
+      {
+        "userId": {
+          "$oid": "665f2fcb6b449f0d1437b6f8"
+        },
+        "score": 4.0,
+        "comment": "Good laptop",
+        "createdAt": "2024-06-02T12:00:00Z"
+      }
+    ],
+    "createdAt": "2024-06-01T08:00:00Z"
+  },
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fc"
+    },
+    "name": "Iphone 16 PRM",
+    "description": "A high-end mobile for professionals.",
+    "price": 31990000,
+    "stock": 15,
+    "category": {
+      "$oid": "665f2fcb6b449f0d1437b6f8"
+    },
+    "brand": "Apple",
+    "tags": ["mobile", "apple", "xps"],
+    "ratings": [
+      {
+        "userId": {
+          "$oid": "665f2fcb6b449f0d1437b6f9"
+        },
+        "score": 3.0,
+        "comment": "Not good mobile",
+        "createdAt": "2024-05-02T12:00:00Z"
+      }
+    ],
+    "createdAt": "2024-05-01T08:00:00Z"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fb"
+    },
+    "userId": {
+      "$oid": "665f2fcb6b449f0d1437b6f8"
+    },
+    "items": [
+      {
+        "productId": {
+          "$oid": "665f2fcb6b449f0d1437b6fa"
+        },
+        "quantity": 2,
+        "price": 12995000
+      }
+    ],
+    "total": 25990000,
+    "shippingAddress": {
+      "street": "123 Le Loi",
+      "city": "Hue",
+      "country": "Vietnam"
+    },
+    "status": "pending",
+    "createdAt": "2024-01-03T10:00:00Z"
+  },
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fc"
+    },
+    "userId": {
+      "$oid": "665f2fcb6b449f0d1437b6f8"
+    },
+    "items": [
+      {
+        "productId": {
+          "$oid": "665f2fcb6b449f0d1437b6fc"
+        },
+        "quantity": 2,
+        "price": 30995000
+      }
+    ],
+    "total": 61990000,
+    "shippingAddress": {
+      "street": "123 Ha Dong",
+      "city": "Ha Noi",
+      "country": "Vietnam"
+    },
+    "status": "pending",
+    "createdAt": "2024-01-03T10:00:00Z"
+  }
+]

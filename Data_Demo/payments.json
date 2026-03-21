@@ -1,0 +1,17 @@
+[
+  {
+    "_id": {
+      "$oid": "665f2fcb6b449f0d1437b6fd"
+    },
+    "orderId": {
+      "$oid": "665f2fcb6b449f0d1437b6fb"
+    },
+    "userId": {
+      "$oid": "665f2fcb6b449f0d1437b6f8"
+    },
+    "amount": 25990000,
+    "method": "credit_card",
+    "status": "paid",
+    "paidAt": "2024-01-03T10:05:00Z"
+  }
+]
