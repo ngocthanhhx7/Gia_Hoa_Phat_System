@@ -50,12 +50,26 @@ prisma/*.db-journal
 Thumbs.db
 Desktop.ini
 
+# local agent workspace
+.agent/
+
 # local logs and debug outputs
 logs/
 *.log
 seed-error.txt
 seed-output.txt
 ts-errors.txt
+
+# local test files
+test-db.ts
+*.spec.ts
+*.spec.tsx
+*.test.ts
+*.test.tsx
+
+# local markdown notes (keep repository README)
+*.md
+!README.md
 
 # local secrets/certs
 *.key
