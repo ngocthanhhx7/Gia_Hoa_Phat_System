@@ -1,0 +1,188 @@
+// Gia Hòa Phát E-commerce — Prisma Schema
+// All 10 SRS entities + Voucher for discount codes
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── User / Account ────────────────────────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?   // null for OAuth users
+  fullName      String
+  phone         String?
+  address       String?
+  avatar        String?
+  role          String    @default("CUSTOMER") // CUSTOMER | ADMIN | VENDOR | STAFF | DELIVERY
+  provider      String?   // google | facebook | credentials
+  providerId    String?
+  failedLogins  Int       @default(0)
+  lockedUntil   DateTime?
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  cart              Cart?
+  orders            Order[]
+  notificationsReceived NotificationLog[] @relation("recipient")
+  notificationsSent     NotificationLog[] @relation("sender")
+}
+
+// ─── Category ──────────────────────────────────────────────────────────────────
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  image     String?
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// ─── Product ───────────────────────────────────────────────────────────────────
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  type        String?   // "ingredient" | "equipment"
+  unit        String?   // "kg", "g", "cái", "hộp", etc.
+  price       Float
+  salePrice   Float?
+  stock       Int      @default(0)
+  images      String?  // JSON array of image URLs
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  cartItems    CartItem[]
+  orderDetails OrderDetail[]
+}
+
+// ─── Cart ──────────────────────────────────────────────────────────────────────
+model Cart {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastActivity DateTime   @default(now())
+  items        CartItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([cartId, productId])
+}
+
+// ─── Order ─────────────────────────────────────────────────────────────────────
+model Order {
+  id           String        @id @default(cuid())
+  code         String        @unique // e.g. GHP-20260322-001
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  status       String        @default("PENDING") // PENDING | CONFIRMED | PROCESSING | SHIPPING | DELIVERED | CANCELLED
+  totalAmount  Float
+  shippingFee  Float         @default(0)
+  discount     Float         @default(0)
+  address      String
+  phone        String
+  note         String?
+  voucherCode  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  details      OrderDetail[]
+  payment      Payment?
+  delivery     Delivery?
+}
+
+model OrderDetail {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+
+  @@unique([orderId, productId])
+}
+
+// ─── Payment ───────────────────────────────────────────────────────────────────
+model Payment {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  order           Order    @relation(fields: [orderId], references: [id])
+  method          String   // COD | VNPAY | MOMO | BANK_TRANSFER
+  transactionCode String?
+  amount          Float
+  status          String   @default("PENDING") // PENDING | SUCCESS | FAILED
+  paidAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── Delivery ──────────────────────────────────────────────────────────────────
+model Delivery {
+  id           String   @id @default(cuid())
+  orderId      String   @unique
+  order        Order    @relation(fields: [orderId], references: [id])
+  carrier      String?
+  trackingCode String?
+  status       String   @default("PREPARING") // PREPARING | PICKED_UP | IN_TRANSIT | DELIVERED | FAILED
+  estimatedAt  DateTime?
+  deliveredAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─── Notification ──────────────────────────────────────────────────────────────
+model NotificationLog {
+  id          String   @id @default(cuid())
+  type        String   // ORDER_CONFIRMED | ORDER_SHIPPED | PROMOTION | ACCOUNT_UPDATE
+  title       String
+  message     String
+  recipientId String
+  recipient   User     @relation("recipient", fields: [recipientId], references: [id])
+  senderId    String?
+  sender      User?    @relation("sender", fields: [senderId], references: [id])
+  channel     String   @default("IN_APP") // IN_APP | EMAIL | SMS
+  isRead      Boolean  @default(false)
+  sentAt      DateTime @default(now())
+}
+
+// ─── Voucher / Discount Code ───────────────────────────────────────────────────
+model Voucher {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  description    String?
+  discountType   String   // PERCENTAGE | FIXED
+  discountValue  Float    // e.g. 10 (for 10%) or 50000 (for 50,000 VND)
+  minOrderValue  Float    @default(0)
+  maxUses        Int      @default(0) // 0 = unlimited
+  usedCount      Int      @default(0)
+  startDate      DateTime
+  endDate        DateTime
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
