@@ -206,6 +206,7 @@ export default function CheckoutPage() {
                 <label className="block text-sm font-medium text-slate-600 mb-1">Địa chỉ giao hàng *</label>
                 <input
                   type="text"
+                  data-testid="checkout-address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
@@ -219,6 +220,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="tel"
+                  data-testid="checkout-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="0912 345 678"
@@ -286,6 +288,7 @@ export default function CheckoutPage() {
             <div className="flex gap-2">
               <input
                 type="text"
+                data-testid="voucher-code"
                 value={voucherCode}
                 onChange={(e) => {
                   setVoucherCode(e.target.value.toUpperCase());
@@ -298,6 +301,7 @@ export default function CheckoutPage() {
               />
               <button
                 type="button"
+                data-testid="apply-voucher"
                 onClick={validateVoucher}
                 className="px-4 py-2.5 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-900 transition"
               >
@@ -360,6 +364,7 @@ export default function CheckoutPage() {
 
             <button
               type="submit"
+              data-testid="place-order"
               disabled={submitting}
               className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition shadow-sm disabled:opacity-50"
             >

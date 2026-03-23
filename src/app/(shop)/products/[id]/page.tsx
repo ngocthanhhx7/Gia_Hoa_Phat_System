@@ -29,7 +29,20 @@ interface Product {
   unit: string | null;
   type: string | null;
   category: { id: string; name: string; slug: string } | null;
+  feedbacks?: {
+    id: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    user: { id: string; fullName: string | null };
+    order: { id: string; code: string; createdAt: string };
+  }[];
 }
+
+type FeedbackStats = {
+  averageRating: number;
+  total: number;
+};
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +55,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats>({ averageRating: 0, total: 0 });
 
   useEffect(() => {
     async function load() {
@@ -54,6 +68,7 @@ export default function ProductDetailPage() {
       const data = await res.json();
       setProduct(data.product);
       setRelated(data.related || []);
+      setFeedbackStats(data.feedbackStats || { averageRating: 0, total: 0 });
       setLoading(false);
     }
     load();
@@ -154,6 +169,8 @@ export default function ProductDetailPage() {
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
+                  title={`Xem ảnh ${i + 1}`}
+                  aria-label={`Xem ảnh ${i + 1}`}
                   className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition flex-shrink-0 ${
                     i === activeImage
                       ? "border-amber-500"
@@ -214,12 +231,16 @@ export default function ProductDetailPage() {
             <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                title="Giảm số lượng"
+                aria-label="Giảm số lượng"
                 className="px-3 py-2.5 hover:bg-slate-50 transition"
               >
                 <Minus className="w-4 h-4" />
               </button>
               <input
                 type="number"
+                title="Số lượng mua"
+                aria-label="Số lượng mua"
                 min={1}
                 max={Math.min(product.stock, BUSINESS_RULES.MAX_CART_QUANTITY)}
                 value={quantity}
@@ -242,6 +263,8 @@ export default function ProductDetailPage() {
                     )
                   )
                 }
+                title="Tăng số lượng"
+                aria-label="Tăng số lượng"
                 className="px-3 py-2.5 hover:bg-slate-50 transition"
               >
                 <Plus className="w-4 h-4" />
@@ -250,6 +273,7 @@ export default function ProductDetailPage() {
 
             <button
               onClick={handleAddToCart}
+              data-testid="add-to-cart"
               disabled={product.stock === 0 || addingToCart}
               className="flex items-center gap-2 px-8 py-3 bg-amber-600 text-white font-medium rounded-xl hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
             >
@@ -294,6 +318,48 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
+
+      <section className="mt-16 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Đánh giá từ khách hàng</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {feedbackStats.total > 0
+                ? `${feedbackStats.total} đánh giá công khai • ${feedbackStats.averageRating.toFixed(1)}/5 sao`
+                : "Sản phẩm chưa có đánh giá công khai nào."}
+            </p>
+          </div>
+          {session && (
+            <Link
+              href="/orders"
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100"
+            >
+              Xem đơn đã mua để gửi feedback
+            </Link>
+          )}
+        </div>
+
+        {product.feedbacks && product.feedbacks.length > 0 ? (
+          <div className="mt-6 space-y-4">
+            {product.feedbacks.map((feedback) => (
+              <article key={feedback.id} className="rounded-2xl border border-slate-100 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold text-slate-800">{feedback.user.fullName || "Khách hàng"}</p>
+                    <p className="text-xs text-slate-400">Đơn {feedback.order.code} • {new Date(feedback.createdAt).toLocaleDateString("vi-VN")}</p>
+                  </div>
+                  <div className="text-sm font-medium text-amber-600">{Array.from({ length: feedback.rating }, () => "★").join("")}</div>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{feedback.comment}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-500">
+            Chưa có feedback nào cho sản phẩm này.
+          </div>
+        )}
+      </section>
 
       {/* Related Products */}
       {related.length > 0 && (

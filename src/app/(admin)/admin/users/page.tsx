@@ -127,6 +127,7 @@ export default function AdminUsersPage() {
           />
         </div>
         <select
+          title="Lọc theo vai trò"
           value={roleFilter}
           onChange={(e) => {
             setRoleFilter(e.target.value);
@@ -175,6 +176,7 @@ export default function AdminUsersPage() {
                       {isLocked ? "Đã khóa" : "Hoạt động"}
                     </span>
                     <select
+                      title="Đổi vai trò người dùng"
                       value={u.role}
                       onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       className="text-xs rounded-lg border border-slate-200 px-2 py-1"
@@ -233,6 +235,7 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-3 text-slate-500">{u.email}</td>
                       <td className="px-4 py-3">
                         <select
+                          title="Đổi vai trò người dùng"
                           value={u.role}
                           onChange={(e) =>
                             handleRoleChange(u.id, e.target.value)

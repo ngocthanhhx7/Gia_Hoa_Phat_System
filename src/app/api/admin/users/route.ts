@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 // GET /api/admin/users – List all users (admin only)
 export async function GET(req: Request) {
   const session = await auth();
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session?.user || !["ADMIN", "STAFF"].includes(role || "")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
   const limit = Math.min(50, parseInt(searchParams.get("limit") || "20"));
   const search = searchParams.get("search") || "";
-  const role = searchParams.get("role") || "";
+  const roleFilter = searchParams.get("role") || "";
 
   const where: Record<string, unknown> = {};
   if (search) {
@@ -22,8 +23,8 @@ export async function GET(req: Request) {
       { fullName: { contains: search } },
     ];
   }
-  if (role) {
-    where.role = role;
+  if (roleFilter) {
+    where.role = roleFilter;
   }
 
   const [users, total] = await Promise.all([

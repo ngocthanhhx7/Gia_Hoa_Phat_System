@@ -353,6 +353,8 @@ export default function AdminProductsPage() {
               </h2>
               <button
                 onClick={() => setModalOpen(false)}
+                title="Đóng hộp thoại"
+                aria-label="Đóng hộp thoại"
                 className="p-1 rounded-lg hover:bg-slate-100 transition"
               >
                 <X className="w-5 h-5" />
@@ -378,6 +380,7 @@ export default function AdminProductsPage() {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Loại</label>
                   <select
+                    title="Chọn loại sản phẩm"
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
@@ -437,6 +440,7 @@ export default function AdminProductsPage() {
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Danh mục</label>
                   <select
+                    title="Chọn danh mục sản phẩm"
                     value={form.categoryId}
                     onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"

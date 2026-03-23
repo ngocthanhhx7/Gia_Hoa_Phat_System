@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import {
-  ShoppingCart,
-  User,
-  Menu,
-  X,
-  LogOut,
-  LayoutDashboard,
   ChefHat,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ShoppingCart,
+  Truck,
+  User,
+  X,
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -18,53 +19,51 @@ export default function Navbar() {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const canAccessBackoffice = ["ADMIN", "STAFF", "VENDOR"].includes(session?.user?.role || "");
+  const role = session?.user?.role || "";
+  const canAccessBackoffice = ["ADMIN", "STAFF", "VENDOR"].includes(role);
+  const canAccessDelivery = role === "DELIVERY";
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xl font-bold text-amber-700 hover:text-amber-800 transition"
+            className="flex items-center gap-2 text-xl font-bold text-amber-700 transition hover:text-amber-800"
           >
-            <ChefHat className="w-7 h-7" />
+            <ChefHat className="h-7 w-7" />
             <span className="hidden sm:inline">Gia Hòa Phát</span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <Link
-              href="/products"
-              className="hover:text-amber-700 transition"
-            >
+          <div className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
+            <Link href="/products" className="transition hover:text-amber-700">
               Sản phẩm
             </Link>
-            <Link
-              href="/products?type=ingredient"
-              className="hover:text-amber-700 transition"
-            >
+            <Link href="/products?type=ingredient" className="transition hover:text-amber-700">
               Nguyên liệu
             </Link>
-            <Link
-              href="/products?type=equipment"
-              className="hover:text-amber-700 transition"
-            >
+            <Link href="/products?type=equipment" className="transition hover:text-amber-700">
               Thiết bị
             </Link>
+            <Link href="/support" className="transition hover:text-amber-700">
+              Hỗ trợ
+            </Link>
+            {session && (
+              <Link href="/orders" className="transition hover:text-amber-700">
+                Đơn hàng
+              </Link>
+            )}
           </div>
 
-          {/* Right Side Actions */}
           <div className="flex items-center gap-3">
             {session ? (
               <>
                 <Link
                   href="/cart"
-                  className="relative p-2 rounded-full hover:bg-slate-100 transition"
+                  className="relative rounded-full p-2 transition hover:bg-slate-100"
                   title="Giỏ hàng"
                 >
-                  <ShoppingCart className="w-5 h-5 text-slate-600" />
+                  <ShoppingCart className="h-5 w-5 text-slate-600" />
                 </Link>
 
                 <NotificationBell />
@@ -72,26 +71,36 @@ export default function Navbar() {
                 {canAccessBackoffice && (
                   <Link
                     href="/admin/dashboard"
-                    className="p-2 rounded-full hover:bg-slate-100 transition"
+                    className="rounded-full p-2 transition hover:bg-slate-100"
                     title="Điều hành"
                   >
-                    <LayoutDashboard className="w-5 h-5 text-slate-600" />
+                    <LayoutDashboard className="h-5 w-5 text-slate-600" />
+                  </Link>
+                )}
+
+                {canAccessDelivery && (
+                  <Link
+                    href="/delivery"
+                    className="rounded-full p-2 transition hover:bg-slate-100"
+                    title="Giao hàng"
+                  >
+                    <Truck className="h-5 w-5 text-slate-600" />
                   </Link>
                 )}
 
                 <Link
                   href="/profile"
-                  className="p-2 rounded-full hover:bg-slate-100 transition"
+                  className="rounded-full p-2 transition hover:bg-slate-100"
                   title="Tài khoản"
                 >
-                  <User className="w-5 h-5 text-slate-600" />
+                  <User className="h-5 w-5 text-slate-600" />
                 </Link>
 
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-500 hover:text-red-600 transition rounded-lg hover:bg-red-50"
+                  className="hidden items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-500 transition hover:bg-red-50 hover:text-red-600 sm:flex"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="h-4 w-4" />
                   <span>Đăng xuất</span>
                 </button>
               </>
@@ -99,64 +108,83 @@ export default function Navbar() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-amber-700 hover:text-amber-800 transition"
+                  className="px-4 py-2 text-sm font-medium text-amber-700 transition hover:text-amber-800"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition shadow-sm"
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700"
                 >
                   Đăng ký
                 </Link>
               </div>
             )}
 
-            {/* Mobile menu button */}
             <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition"
+              onClick={() => setMobileOpen((value) => !value)}
+              className="rounded-lg p-2 transition hover:bg-slate-100 md:hidden"
             >
-              {mobileOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Nav */}
         {mobileOpen && (
-          <div className="md:hidden pb-4 border-t border-slate-100 mt-2 pt-3 space-y-1">
+          <div className="mt-2 space-y-1 border-t border-slate-100 pb-4 pt-3 md:hidden">
             <Link
               href="/products"
-              className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+              className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               onClick={() => setMobileOpen(false)}
             >
               Tất cả sản phẩm
             </Link>
             <Link
               href="/products?type=ingredient"
-              className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+              className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               onClick={() => setMobileOpen(false)}
             >
               Nguyên liệu
             </Link>
             <Link
               href="/products?type=equipment"
-              className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+              className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               onClick={() => setMobileOpen(false)}
             >
               Thiết bị
             </Link>
+            <Link
+              href="/support"
+              className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+              onClick={() => setMobileOpen(false)}
+            >
+              Hỗ trợ
+            </Link>
+            {session && (
+              <Link
+                href="/orders"
+                className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                onClick={() => setMobileOpen(false)}
+              >
+                Đơn hàng
+              </Link>
+            )}
             {canAccessBackoffice && (
               <Link
                 href="/admin/dashboard"
-                className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+                className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                 onClick={() => setMobileOpen(false)}
               >
                 Điều hành
+              </Link>
+            )}
+            {canAccessDelivery && (
+              <Link
+                href="/delivery"
+                className="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                onClick={() => setMobileOpen(false)}
+              >
+                Giao hàng
               </Link>
             )}
             {session && (
@@ -165,7 +193,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                   signOut({ callbackUrl: "/" });
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50"
+                className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
               >
                 Đăng xuất
               </button>

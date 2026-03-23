@@ -189,6 +189,7 @@ function ProductsContent() {
               Danh mục
             </label>
             <select
+              title="Chọn danh mục"
               value={categoryId}
               onChange={(e) => updateFilter("categoryId", e.target.value)}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
@@ -206,6 +207,7 @@ function ProductsContent() {
               Sắp xếp
             </label>
             <select
+              title="Chọn cách sắp xếp"
               value={sort}
               onChange={(e) => updateFilter("sort", e.target.value)}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
@@ -254,6 +256,7 @@ function ProductsContent() {
             <Link
               key={product.id}
               href={`/products/${product.id}`}
+              data-testid={`product-card-${product.slug}`}
               className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg hover:border-amber-200 transition-all duration-300"
             >
               {/* Image */}

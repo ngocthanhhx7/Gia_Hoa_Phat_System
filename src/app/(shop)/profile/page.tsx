@@ -119,6 +119,7 @@ export default function ProfilePage() {
             <input
               value={profile.email}
               readOnly
+              title="Email tài khoản"
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed"
             />
           </div>

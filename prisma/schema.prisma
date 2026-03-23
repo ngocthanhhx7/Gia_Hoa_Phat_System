@@ -30,6 +30,11 @@ model User {
 
   cart              Cart?
   orders            Order[]
+  assignedDeliveries Delivery[] @relation("deliveryAssignee")
+  feedbacks         Feedback[]
+  supportTickets    SupportTicket[] @relation("ticketOwner")
+  assignedTickets   SupportTicket[] @relation("ticketAssignee")
+  supportReplies    SupportReply[]
   notificationsReceived NotificationLog[] @relation("recipient")
   notificationsSent     NotificationLog[] @relation("sender")
 }
@@ -69,6 +74,7 @@ model Product {
 
   cartItems    CartItem[]
   orderDetails OrderDetail[]
+  feedbacks    Feedback[]
 }
 
 // ─── Cart ──────────────────────────────────────────────────────────────────────
@@ -113,6 +119,7 @@ model Order {
   details      OrderDetail[]
   payment      Payment?
   delivery     Delivery?
+  feedbacks    Feedback[]
 }
 
 model OrderDetail {
@@ -146,6 +153,8 @@ model Delivery {
   id           String   @id @default(cuid())
   orderId      String   @unique
   order        Order    @relation(fields: [orderId], references: [id])
+  assigneeId   String?
+  assignee     User?    @relation("deliveryAssignee", fields: [assigneeId], references: [id])
   carrier      String?
   trackingCode String?
   status       String   @default("PREPARING") // PREPARING | PICKED_UP | IN_TRANSIT | DELIVERED | FAILED
@@ -168,6 +177,47 @@ model NotificationLog {
   channel     String   @default("IN_APP") // IN_APP | EMAIL | SMS
   isRead      Boolean  @default(false)
   sentAt      DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId, orderId])
+}
+
+model SupportTicket {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation("ticketOwner", fields: [userId], references: [id], onDelete: Cascade)
+  subject      String
+  category     String
+  status       String         @default("OPEN")
+  assignedToId String?
+  assignedTo   User?          @relation("ticketAssignee", fields: [assignedToId], references: [id])
+  replies      SupportReply[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model SupportReply {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime      @default(now())
 }
 
 // ─── Voucher / Discount Code ───────────────────────────────────────────────────

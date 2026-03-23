@@ -1,3 +1,5 @@
+import ChatbotWidget from "@/components/ChatbotWidget";
+
 export default function AuthLayout({
   children,
 }: {
@@ -6,6 +8,7 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-orange-50 px-4 py-12">
       {children}
+      <ChatbotWidget />
     </div>
   );
 }

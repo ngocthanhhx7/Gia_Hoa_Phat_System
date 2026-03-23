@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -14,6 +14,11 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   const {
     register,
@@ -104,6 +109,7 @@ export default function LoginPage() {
             <input
               {...register("email")}
               type="email"
+              data-testid="login-email"
               placeholder="you@example.com"
               autoComplete="email"
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition placeholder:text-slate-400"
@@ -122,6 +128,7 @@ export default function LoginPage() {
               <input
                 {...register("password")}
                 type={showPassword ? "text" : "password"}
+                data-testid="login-password"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition placeholder:text-slate-400"
@@ -142,7 +149,8 @@ export default function LoginPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            data-testid="login-submit"
+            disabled={isSubmitting || !isReady}
             className="w-full py-2.5 bg-amber-600 text-white text-sm font-semibold rounded-xl hover:bg-amber-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}

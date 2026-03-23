@@ -69,9 +69,41 @@ export const updateProfileSchema = z.object({
   address: z.string().optional(),
 });
 
+export const feedbackSchema = z.object({
+  productId: z.string().min(1, "Thiếu sản phẩm"),
+  orderId: z.string().min(1, "Thiếu đơn hàng"),
+  rating: z.number().int().min(1, "Đánh giá tối thiểu 1 sao").max(5, "Đánh giá tối đa 5 sao"),
+  comment: z.string().trim().min(3, "Vui lòng nhập nhận xét").max(1000, "Nhận xét quá dài"),
+});
+
+export const supportTicketSchema = z.object({
+  subject: z.string().trim().min(5, "Chủ đề phải có ít nhất 5 ký tự").max(120, "Chủ đề quá dài"),
+  category: z.enum(["ORDER", "PAYMENT", "DELIVERY", "PRODUCT", "ACCOUNT", "OTHER"]),
+  message: z.string().trim().min(10, "Nội dung phải có ít nhất 10 ký tự").max(2000, "Nội dung quá dài"),
+});
+
+export const supportReplySchema = z.object({
+  message: z.string().trim().min(1, "Vui lòng nhập nội dung phản hồi").max(2000, "Nội dung quá dài"),
+});
+
+export const supportTicketUpdateSchema = z.object({
+  status: z.enum(["OPEN", "IN_PROGRESS", "WAITING_USER", "RESOLVED", "CLOSED"]).optional(),
+  assignedToId: z.string().nullable().optional(),
+});
+
+export const chatbotMessageSchema = z.object({
+  message: z.string().trim().min(2, "Tin nhắn quá ngắn").max(1000, "Tin nhắn quá dài"),
+  sessionId: z.string().optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ProductInput = z.infer<typeof productSchema>;
 export type AddToCartInput = z.infer<typeof addToCartSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type FeedbackInput = z.infer<typeof feedbackSchema>;
+export type SupportTicketInput = z.infer<typeof supportTicketSchema>;
+export type SupportReplyInput = z.infer<typeof supportReplySchema>;
+export type SupportTicketUpdateInput = z.infer<typeof supportTicketUpdateSchema>;
+export type ChatbotMessageInput = z.infer<typeof chatbotMessageSchema>;

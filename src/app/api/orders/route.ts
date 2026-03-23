@@ -8,7 +8,6 @@ import {
   notifyLowStock,
 } from "@/lib/notifications";
 
-// Helper: generate order code like GHP-20260322-001
 function generateOrderCode() {
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -18,26 +17,29 @@ function generateOrderCode() {
   return `GHP-${dateStr}-${random}`;
 }
 
-// GET /api/orders — list user's orders (or all for admin/staff)
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
   }
 
+  const role = session.user.role || "";
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
 
-  const isStaff = ["ADMIN", "STAFF", "VENDOR"].includes(session.user.role || "");
-
   const where: Record<string, unknown> = {};
-  if (!isStaff) {
+  if (role === "DELIVERY") {
+    where.delivery = { assigneeId: session.user.id };
+  } else if (!["ADMIN", "STAFF", "VENDOR"].includes(role)) {
     where.userId = session.user.id;
   }
+
   if (status) {
     where.status = status;
+  } else if (role === "DELIVERY") {
+    where.status = { in: ["PROCESSING", "SHIPPING", "DELIVERED"] };
   }
 
   const [orders, total] = await Promise.all([
@@ -52,7 +54,13 @@ export async function GET(req: NextRequest) {
           },
         },
         payment: true,
-        delivery: true,
+        delivery: {
+          include: {
+            assignee: {
+              select: { id: true, fullName: true, email: true, phone: true },
+            },
+          },
+        },
         user: { select: { id: true, fullName: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -68,7 +76,6 @@ export async function GET(req: NextRequest) {
   });
 }
 
-// POST /api/orders — create new order from cart
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -85,7 +92,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Get cart with items
   const cart = await prisma.cart.findUnique({
     where: { userId: session.user.id },
     include: {
@@ -99,7 +105,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Giỏ hàng trống" }, { status: 400 });
   }
 
-  // Validate stock for all items
   for (const item of cart.items) {
     if (!item.product.active) {
       return NextResponse.json(
@@ -115,7 +120,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Calculate totals
   let subtotal = 0;
   const orderDetails = cart.items.map((item) => {
     const unitPrice = item.product.salePrice ?? item.product.price;
@@ -127,49 +131,47 @@ export async function POST(req: NextRequest) {
     };
   });
 
-  // Apply voucher (BR13)
   let discount = 0;
   if (voucherCode) {
     const voucher = await prisma.voucher.findUnique({ where: { code: voucherCode } });
     const now = new Date();
-    if (
-      !voucher ||
-      !voucher.active ||
-      now < voucher.startDate ||
-      now > voucher.endDate
-    ) {
-      return NextResponse.json({ error: "Mã giảm giá không hợp lệ hoặc đã hết hạn" }, { status: 400 });
+    if (!voucher || !voucher.active || now < voucher.startDate || now > voucher.endDate) {
+      return NextResponse.json(
+        { error: "Mã giảm giá không hợp lệ hoặc đã hết hạn" },
+        { status: 400 }
+      );
     }
     if (voucher.maxUses > 0 && voucher.usedCount >= voucher.maxUses) {
-      return NextResponse.json({ error: "Mã giảm giá đã hết lượt sử dụng" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Mã giảm giá đã hết lượt sử dụng" },
+        { status: 400 }
+      );
     }
     if (subtotal < voucher.minOrderValue) {
       return NextResponse.json(
-        { error: `Đơn hàng tối thiểu ${voucher.minOrderValue.toLocaleString("vi-VN")} đ để sử dụng mã này` },
+        {
+          error: `Đơn hàng tối thiểu ${voucher.minOrderValue.toLocaleString(
+            "vi-VN"
+          )} đ để sử dụng mã này`,
+        },
         { status: 400 }
       );
     }
 
-    if (voucher.discountType === "PERCENTAGE") {
-      discount = Math.round(subtotal * (voucher.discountValue / 100));
-    } else {
-      discount = voucher.discountValue;
-    }
-    discount = Math.min(discount, subtotal); // Don't let discount exceed subtotal
+    discount =
+      voucher.discountType === "PERCENTAGE"
+        ? Math.round(subtotal * (voucher.discountValue / 100))
+        : voucher.discountValue;
+    discount = Math.min(discount, subtotal);
   }
 
-  const shippingFee = subtotal >= 500000 ? 0 : 30000; // Free shipping over 500k
+  const shippingFee = subtotal >= 500000 ? 0 : 30000;
   const totalAmount = subtotal - discount + shippingFee;
 
-  // Minimum order check (BR10: 50,000 VND)
   if (subtotal < 50000) {
-    return NextResponse.json(
-      { error: MESSAGES.MSG09 },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: MESSAGES.MSG09 }, { status: 400 });
   }
 
-  // Create order with details, payment, and delivery
   const order = await prisma.order.create({
     data: {
       code: generateOrderCode(),
@@ -189,7 +191,7 @@ export async function POST(req: NextRequest) {
         create: {
           method: paymentMethod,
           amount: totalAmount,
-          status: paymentMethod === "COD" ? "PENDING" : "PENDING",
+          status: "PENDING",
         },
       },
       delivery: {
@@ -201,11 +203,16 @@ export async function POST(req: NextRequest) {
     include: {
       details: { include: { product: { select: { name: true } } } },
       payment: true,
-      delivery: true,
+      delivery: {
+        include: {
+          assignee: {
+            select: { id: true, fullName: true, email: true, phone: true },
+          },
+        },
+      },
     },
   });
 
-  // Deduct stock
   for (const item of cart.items) {
     await prisma.product.update({
       where: { id: item.productId },
@@ -213,7 +220,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Update voucher usage
   if (voucherCode) {
     await prisma.voucher.update({
       where: { code: voucherCode },
@@ -221,7 +227,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Clear cart
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
   const admins = await prisma.user.findMany({

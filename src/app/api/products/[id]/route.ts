@@ -10,7 +10,21 @@ export async function GET(
 
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { category: true },
+      include: {
+        category: true,
+        feedbacks: {
+          where: { isVisible: true },
+          include: {
+            user: {
+              select: { id: true, fullName: true },
+            },
+            order: {
+              select: { id: true, code: true, createdAt: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
     });
 
     if (!product || !product.active) {
@@ -33,7 +47,19 @@ export async function GET(
         })
       : [];
 
-    return NextResponse.json({ product, related });
+    const averageRating =
+      product.feedbacks.length > 0
+        ? product.feedbacks.reduce((total, feedback) => total + feedback.rating, 0) / product.feedbacks.length
+        : 0;
+
+    return NextResponse.json({
+      product,
+      related,
+      feedbackStats: {
+        averageRating,
+        total: product.feedbacks.length,
+      },
+    });
   } catch (error) {
     console.error("Product detail error:", error);
     return NextResponse.json({ error: "Lỗi server" }, { status: 500 });

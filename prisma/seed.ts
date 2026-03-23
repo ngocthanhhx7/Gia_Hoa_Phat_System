@@ -1,21 +1,45 @@
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "../src/generated/prisma/client.js";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || "file:./prisma/dev.db",
 });
+
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("Seeding Gia Hoa Phat database...");
 
-  // ─── Admin User ──────────────────────────────────────────────────────────────
+  await prisma.notificationLog.deleteMany();
+  await prisma.supportReply.deleteMany();
+  await prisma.supportTicket.deleteMany();
+  await prisma.feedback.deleteMany();
+  await prisma.cartItem.deleteMany();
+  await prisma.cart.deleteMany();
+  await prisma.orderDetail.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.delivery.deleteMany();
+  await prisma.order.deleteMany();
+  console.log("Cleared transactional data");
+
   const adminPassword = await bcrypt.hash("Admin@2024", 10);
+  const customerPassword = await bcrypt.hash("Customer@2024", 10);
+  const staffPassword = await bcrypt.hash("Staff@2024", 10);
+  const deliveryPassword = await bcrypt.hash("Delivery@2024", 10);
+
   const admin = await prisma.user.upsert({
     where: { email: "admin@giahoophat.vn" },
-    update: {},
+    update: {
+      password: adminPassword,
+      fullName: "Quản Trị Viên",
+      phone: "0901234567",
+      role: "ADMIN",
+      emailVerified: true,
+      failedLogins: 0,
+      lockedUntil: null,
+    },
     create: {
       email: "admin@giahoophat.vn",
       password: adminPassword,
@@ -25,30 +49,41 @@ async function main() {
       emailVerified: true,
     },
   });
-  console.log("✅ Admin:", admin.email);
 
-  // ─── Customer User ──────────────────────────────────────────────────────────
-  const customerPassword = await bcrypt.hash("Customer@2024", 10);
   const customer = await prisma.user.upsert({
     where: { email: "khachhang@gmail.com" },
-    update: {},
+    update: {
+      password: customerPassword,
+      fullName: "Nguyễn Văn A",
+      phone: "0912345678",
+      address: "123 Nguyễn Văn Cừ, Quận 5, TP.HCM",
+      role: "CUSTOMER",
+      emailVerified: true,
+      failedLogins: 0,
+      lockedUntil: null,
+    },
     create: {
       email: "khachhang@gmail.com",
       password: customerPassword,
       fullName: "Nguyễn Văn A",
       phone: "0912345678",
-      address: "123 Nguyễn Văn Cừ, Q.5, TP.HCM",
+      address: "123 Nguyễn Văn Cừ, Quận 5, TP.HCM",
       role: "CUSTOMER",
       emailVerified: true,
     },
   });
-  console.log("✅ Customer:", customer.email);
 
-  // ─── Staff User ──────────────────────────────────────────────────────────────
-  const staffPassword = await bcrypt.hash("Staff@2024", 10);
   const staff = await prisma.user.upsert({
     where: { email: "nhanvien@giahoophat.vn" },
-    update: {},
+    update: {
+      password: staffPassword,
+      fullName: "Trần Thị B",
+      phone: "0987654321",
+      role: "STAFF",
+      emailVerified: true,
+      failedLogins: 0,
+      lockedUntil: null,
+    },
     create: {
       email: "nhanvien@giahoophat.vn",
       password: staffPassword,
@@ -58,9 +93,30 @@ async function main() {
       emailVerified: true,
     },
   });
-  console.log("✅ Staff:", staff.email);
 
-  // ─── Categories ──────────────────────────────────────────────────────────────
+  const deliveryUser = await prisma.user.upsert({
+    where: { email: "giaohang@giahoophat.vn" },
+    update: {
+      password: deliveryPassword,
+      fullName: "Lê Văn Giao",
+      phone: "0977777777",
+      role: "DELIVERY",
+      emailVerified: true,
+      failedLogins: 0,
+      lockedUntil: null,
+    },
+    create: {
+      email: "giaohang@giahoophat.vn",
+      password: deliveryPassword,
+      fullName: "Lê Văn Giao",
+      phone: "0977777777",
+      role: "DELIVERY",
+      emailVerified: true,
+    },
+  });
+
+  console.log("Seeded users:", admin.email, customer.email, staff.email, deliveryUser.email);
+
   const catIngredients = await prisma.category.upsert({
     where: { slug: "nguyen-lieu-lam-banh" },
     update: {},
@@ -121,14 +177,11 @@ async function main() {
     },
   });
 
-  console.log("✅ Categories created");
-
-  // ─── Products ────────────────────────────────────────────────────────────────
-  const products = [
+  const productSeeds = [
     {
       name: "Bột mì đa dụng Bakers' Choice 1kg",
       slug: "bot-mi-da-dung-bakers-1kg",
-      description: "Bột mì đa dụng chất lượng cao, thích hợp làm bánh mì, bánh ngọt, bánh quy. Hàm lượng protein 10-12%.",
+      description: "Bột mì đa dụng cho bánh mì, bánh ngọt và bánh quy.",
       type: "ingredient",
       unit: "kg",
       price: 45000,
@@ -140,7 +193,7 @@ async function main() {
     {
       name: "Bột mì làm bánh cao cấp 500g",
       slug: "bot-mi-cao-cap-500g",
-      description: "Bột mì siêu mịn, độ nở cao, chuyên dùng cho bánh kem, bánh bông lan.",
+      description: "Bột siêu mịn cho bánh bông lan và bánh kem.",
       type: "ingredient",
       unit: "gói",
       price: 35000,
@@ -151,7 +204,7 @@ async function main() {
     {
       name: "Sô-cô-la đen 70% cacao Callebaut 1kg",
       slug: "socola-den-70-callebaut-1kg",
-      description: "Sô-cô-la đen Bỉ cao cấp, hàm lượng cacao 70%. Thích hợp làm ganache, truffle, coating.",
+      description: "Sô-cô-la cao cấp phù hợp làm ganache và truffle.",
       type: "ingredient",
       unit: "kg",
       price: 320000,
@@ -164,7 +217,7 @@ async function main() {
     {
       name: "Bột cacao nguyên chất 250g",
       slug: "bot-cacao-nguyen-chat-250g",
-      description: "Bột cacao tự nhiên không đường, màu đậm, hương thơm đặc trưng.",
+      description: "Bột cacao nguyên chất không đường, màu đậm.",
       type: "ingredient",
       unit: "hộp",
       price: 75000,
@@ -175,7 +228,7 @@ async function main() {
     {
       name: "Khuôn bánh silicon 12 lỗ",
       slug: "khuon-banh-silicon-12-lo",
-      description: "Khuôn silicon chịu nhiệt cao -40°C đến 230°C, dễ tháo khuôn, không dính. 12 lỗ tròn.",
+      description: "Khuôn silicon chống dính, chịu nhiệt cao.",
       type: "equipment",
       unit: "cái",
       price: 89000,
@@ -187,7 +240,7 @@ async function main() {
     {
       name: "Bộ đuôi bắt kem 24 đầu inox",
       slug: "bo-duoi-bat-kem-24-dau",
-      description: "Bộ 24 đầu bắt kem inox 304 cao cấp kèm túi bắt silicone. Đa dạng hoa văn trang trí.",
+      description: "Bộ 24 đầu bắt kem cho nhiều kiểu trang trí.",
       type: "equipment",
       unit: "bộ",
       price: 145000,
@@ -199,7 +252,7 @@ async function main() {
     {
       name: "Bơ lạt Anchor 227g",
       slug: "bo-lat-anchor-227g",
-      description: "Bơ lạt nhập khẩu New Zealand, béo 82%, thích hợp làm bánh croissant, buttercream.",
+      description: "Bơ lạt nhập khẩu cho buttercream và pastry.",
       type: "ingredient",
       unit: "thanh",
       price: 65000,
@@ -211,7 +264,7 @@ async function main() {
     {
       name: "Whipping Cream Anchor 1L",
       slug: "whipping-cream-anchor-1l",
-      description: "Kem tươi Anchor 35.5% béo, đánh bông tốt, vị béo ngậy tự nhiên.",
+      description: "Kem tươi dễ đánh bông, hương vị béo mượt.",
       type: "ingredient",
       unit: "hộp",
       price: 95000,
@@ -222,7 +275,7 @@ async function main() {
     {
       name: "Máy đánh trứng cầm tay 5 tốc độ",
       slug: "may-danh-trung-cam-tay",
-      description: "Máy đánh trứng 300W, 5 mức tốc độ, 2 que đánh inox. Nhỏ gọn, dễ sử dụng.",
+      description: "Máy đánh trứng 300W nhỏ gọn, dễ dùng.",
       type: "equipment",
       unit: "cái",
       price: 250000,
@@ -234,7 +287,7 @@ async function main() {
     {
       name: "Cân điện tử nhà bếp 5kg",
       slug: "can-dien-tu-nha-bep-5kg",
-      description: "Cân điện tử độ chính xác 1g, màn hình LCD. Chuyển đổi đơn vị g/oz/ml/lb.",
+      description: "Cân điện tử độ chính xác 1g, màn hình LCD.",
       type: "equipment",
       unit: "cái",
       price: 120000,
@@ -244,16 +297,17 @@ async function main() {
     },
   ];
 
-  for (const product of products) {
-    await prisma.product.upsert({
-      where: { slug: product.slug },
-      update: {},
-      create: product,
+  const productMap = new Map<string, Awaited<ReturnType<typeof prisma.product.upsert>>>();
+  for (const productSeed of productSeeds) {
+    const product = await prisma.product.upsert({
+      where: { slug: productSeed.slug },
+      update: productSeed,
+      create: productSeed,
     });
+    productMap.set(product.slug, product);
   }
-  console.log(`✅ ${products.length} products created`);
+  console.log("Seeded products:", productMap.size);
 
-  // ─── Vouchers ────────────────────────────────────────────────────────────────
   await prisma.voucher.upsert({
     where: { code: "WELCOME10" },
     update: {},
@@ -274,7 +328,7 @@ async function main() {
     update: {},
     create: {
       code: "GIAM50K",
-      description: "Giảm 50,000đ cho đơn từ 300,000đ",
+      description: "Giảm 50.000đ cho đơn từ 300.000đ",
       discountType: "FIXED",
       discountValue: 50000,
       minOrderValue: 300000,
@@ -283,14 +337,181 @@ async function main() {
       endDate: new Date("2026-12-31"),
     },
   });
-  console.log("✅ Vouchers created");
 
-  console.log("🎉 Seed completed!");
+  const deliveredOrder = await prisma.order.create({
+    data: {
+      code: "GHP-20260320-101",
+      userId: customer.id,
+      status: "DELIVERED",
+      totalAmount: 524000,
+      shippingFee: 0,
+      discount: 50000,
+      address: customer.address || "123 Nguyễn Văn Cừ, Quận 5, TP.HCM",
+      phone: customer.phone || "0912345678",
+      note: "Gọi trước khi giao",
+      voucherCode: "GIAM50K",
+      createdAt: new Date("2026-03-20T08:30:00.000Z"),
+      updatedAt: new Date("2026-03-21T10:30:00.000Z"),
+      details: {
+        create: [
+          {
+            productId: productMap.get("socola-den-70-callebaut-1kg")!.id,
+            quantity: 1,
+            unitPrice: 285000,
+          },
+          {
+            productId: productMap.get("whipping-cream-anchor-1l")!.id,
+            quantity: 2,
+            unitPrice: 95000,
+          },
+          {
+            productId: productMap.get("khuon-banh-silicon-12-lo")!.id,
+            quantity: 1,
+            unitPrice: 89000,
+          },
+        ],
+      },
+      payment: {
+        create: {
+          method: "COD",
+          amount: 524000,
+          status: "SUCCESS",
+          paidAt: new Date("2026-03-21T10:30:00.000Z"),
+        },
+      },
+      delivery: {
+        create: {
+          status: "DELIVERED",
+          carrier: "Giao Hàng Nhanh",
+          trackingCode: "GHN-DEMO-001",
+          deliveredAt: new Date("2026-03-21T10:30:00.000Z"),
+          assigneeId: deliveryUser.id,
+        },
+      },
+    },
+    include: {
+      details: true,
+    },
+  });
+
+  await prisma.order.create({
+    data: {
+      code: "GHP-20260322-202",
+      userId: customer.id,
+      status: "PROCESSING",
+      totalAmount: 264000,
+      shippingFee: 30000,
+      discount: 0,
+      address: customer.address || "123 Nguyễn Văn Cừ, Quận 5, TP.HCM",
+      phone: customer.phone || "0912345678",
+      note: null,
+      createdAt: new Date("2026-03-22T07:45:00.000Z"),
+      updatedAt: new Date("2026-03-22T11:00:00.000Z"),
+      details: {
+        create: [
+          {
+            productId: productMap.get("bo-duoi-bat-kem-24-dau")!.id,
+            quantity: 1,
+            unitPrice: 125000,
+          },
+          {
+            productId: productMap.get("can-dien-tu-nha-bep-5kg")!.id,
+            quantity: 1,
+            unitPrice: 120000,
+          },
+        ],
+      },
+      payment: {
+        create: {
+          method: "COD",
+          amount: 264000,
+          status: "PENDING",
+        },
+      },
+      delivery: {
+        create: {
+          status: "PREPARING",
+          carrier: "Giao Hàng Nhanh",
+          trackingCode: "GHN-DEMO-002",
+          assigneeId: deliveryUser.id,
+        },
+      },
+    },
+  });
+
+  await prisma.feedback.create({
+    data: {
+      userId: customer.id,
+      productId: productMap.get("socola-den-70-callebaut-1kg")!.id,
+      orderId: deliveredOrder.id,
+      rating: 5,
+      comment: "Sô-cô-la rất thơm, dễ temper và đóng gói cẩn thận.",
+      isVisible: true,
+      createdAt: new Date("2026-03-21T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-21T12:00:00.000Z"),
+    },
+  });
+
+  const openTicket = await prisma.supportTicket.create({
+    data: {
+      userId: customer.id,
+      subject: "Cần hỗ trợ đổi địa chỉ giao hàng",
+      category: "DELIVERY",
+      status: "IN_PROGRESS",
+      assignedToId: staff.id,
+      createdAt: new Date("2026-03-22T03:00:00.000Z"),
+      updatedAt: new Date("2026-03-22T06:30:00.000Z"),
+      replies: {
+        create: [
+          {
+            senderId: customer.id,
+            message: "Mình muốn đổi địa chỉ giao hàng cho đơn đang chuẩn bị.",
+            createdAt: new Date("2026-03-22T03:00:00.000Z"),
+          },
+          {
+            senderId: staff.id,
+            message: "Bên mình đã tiếp nhận. Bạn vui lòng xác nhận lại địa chỉ mới trong phản hồi tiếp theo.",
+            createdAt: new Date("2026-03-22T06:30:00.000Z"),
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.supportTicket.create({
+    data: {
+      userId: customer.id,
+      subject: "Hướng dẫn kiểm tra lịch sử đơn hàng",
+      category: "ACCOUNT",
+      status: "RESOLVED",
+      assignedToId: admin.id,
+      createdAt: new Date("2026-03-21T02:00:00.000Z"),
+      updatedAt: new Date("2026-03-21T04:00:00.000Z"),
+      replies: {
+        create: [
+          {
+            senderId: customer.id,
+            message: "Mình muốn xem lại các đơn đã mua nhưng chưa rõ vào đâu.",
+            createdAt: new Date("2026-03-21T02:00:00.000Z"),
+          },
+          {
+            senderId: admin.id,
+            message: "Bạn đăng nhập rồi vào mục Đơn hàng để xem lịch sử mua hàng và tracking từng đơn.",
+            createdAt: new Date("2026-03-21T04:00:00.000Z"),
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("Seeded sample delivered order:", deliveredOrder.code);
+  console.log("Seeded sample support ticket:", openTicket.subject);
+  console.log("Seed complete");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

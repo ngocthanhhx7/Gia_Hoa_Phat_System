@@ -183,6 +183,8 @@ export default function CartPage() {
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         disabled={isUpdating}
+                        title="Giảm số lượng"
+                        aria-label="Giảm số lượng"
                         className="p-1 rounded-md hover:bg-slate-100 transition disabled:opacity-50"
                       >
                         <Minus className="w-4 h-4" />
@@ -191,6 +193,8 @@ export default function CartPage() {
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         disabled={isUpdating || item.quantity >= item.product.stock}
+                        title="Tăng số lượng"
+                        aria-label="Tăng số lượng"
                         className="p-1 rounded-md hover:bg-slate-100 transition disabled:opacity-50"
                       >
                         <Plus className="w-4 h-4" />
@@ -204,6 +208,8 @@ export default function CartPage() {
                       <button
                         onClick={() => removeItem(item.id)}
                         disabled={isUpdating}
+                        title="Xóa sản phẩm khỏi giỏ"
+                        aria-label="Xóa sản phẩm khỏi giỏ"
                         className="p-1.5 rounded-md text-red-400 hover:bg-red-50 hover:text-red-600 transition disabled:opacity-50"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -251,6 +257,7 @@ export default function CartPage() {
 
             <Link
               href="/checkout"
+              data-testid="proceed-to-checkout"
               className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition shadow-sm"
             >
               Tiến hành thanh toán
